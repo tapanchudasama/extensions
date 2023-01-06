@@ -3,10 +3,7 @@ import { Cache } from "@raycast/api";
 import * as google from "./oauth/google";
 import { MailResponseType } from "./oauth/google";
 
-const cache = new Cache();
-// The HNRSS service caches responses for 5 minutes: https://github.com/hnrss/hnrss/issues/71
-const CACHE_DURATION = 300000;
-type CacheEntry = { timestamp: number; items: MailResponseType[] };
+export const cache = new Cache();
 
 interface State {
   isLoading: boolean;
@@ -19,23 +16,6 @@ export const useMail = (): [MailResponseType[], boolean, Error | null] => {
 
   useEffect(() => {
     async function fetchStories() {
-      const cachedResponse = cache.get("mails");
-      cache.clear();
-
-      if (cachedResponse) {
-        try {
-          const parsed: CacheEntry = JSON.parse(cachedResponse);
-          const elapsed = Date.now() - parsed.timestamp;
-          console.log(`cache age: ${elapsed / 1000} seconds`);
-          if (elapsed <= CACHE_DURATION) {
-            setState((previous) => ({ ...previous, items: parsed.items, isLoading: false }));
-            return;
-          }
-        } catch (e) {
-          // nothing to do
-        }
-      }
-
       setState((previous) => ({ ...previous, isLoading: true }));
       try {
         await google.authorize();

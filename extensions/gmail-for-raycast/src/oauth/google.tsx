@@ -1,5 +1,8 @@
-import { OAuth, LocalStorage } from "@raycast/api";
+import { OAuth } from "@raycast/api";
 import fetch from "node-fetch";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import Batchelor from "batchelor";
 
 export type MailResponseType = {
   id: string;
@@ -38,6 +41,7 @@ export async function authorize(): Promise<void> {
     scope:
       "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/gmail.readonly",
   });
+
   const { authorizationCode } = await client.authorize(authRequest);
   await client.setTokens(await fetchTokens(authRequest, authorizationCode));
 }
@@ -78,12 +82,9 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
 // API
 
 export async function fetchItems(): Promise<MailResponseType[]> {
-  // const token = await LocalStorage.getItem("nextPageToken");
-  LocalStorage.clear();
   const params = new URLSearchParams();
-  params.append("labelIds", "INBOX");
-  params.append("maxResults", "10");
-  // token && params.append("pageToken", token as string);
+  const tokenSet = await client.getTokens();
+  params.append("labelIds", "CATEGORY_PERSONAL");
 
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?" + params.toString(), {
     headers: {
@@ -98,44 +99,79 @@ export async function fetchItems(): Promise<MailResponseType[]> {
   }
   const json = (await response.json()) as { messages: { id: string; threadId: string }[]; nextPageToken: string };
 
-  console.log("HERE", json);
-
-  // LocalStorage.setItem("nextPageToken", json.nextPageToken);
-
-  const arr = json.messages.map((j) => fetchItemInfo(j.id));
-
-  return await Promise.all(arr);
-}
-
-async function fetchItemInfo(id: string): Promise<MailResponseType> {
-  const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, {
+  const batch = new Batchelor({
+    // Any batch uri endpoint in the form: https://www.googleapis.com/batch/<api>/<version>
+    uri: "https://www.googleapis.com/batch/gmail/v1/",
+    method: "POST",
+    auth: {
+      bearer: `${tokenSet?.accessToken}`,
+    },
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+      "Content-Type": "multipart/mixed",
     },
   });
 
-  if (!res.ok) {
-    console.error("fetch items error:", await res.text());
-    throw new Error(res.statusText);
-  }
+  const arr: { method: string; path: string }[] = [];
 
-  const json = (await res.json()) as {
-    id: string;
-    payload: {
-      partId: string;
-      mimetype: string;
-      body: {
-        data: string;
-      };
-      headers: { name: string; value: string }[];
-    };
-  };
+  json.messages.forEach((j) => {
+    arr.push({
+      method: "GET",
+      path: `/gmail/v1/users/me/messages/${j.id}?format=metadata`,
+    });
+  });
 
-  return {
-    id: json.id,
-    subject: json.payload.headers.find((h) => h.name === "Subject")?.value as string,
-    from: json.payload.headers.find((h) => h.name === "From")?.value as string,
-    date: json.payload.headers.find((h) => h.name === "Date")?.value as string,
-  };
+  let res = [];
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return new Promise((resolve, reject) => {
+    batch.add(arr).run(function (err, response) {
+      if (err) {
+        reject(err.toString());
+      } else {
+        res = response.parts.map((r: { body: any }) => {
+          return {
+            id: r.body.id,
+            subject: r.body.payload.headers.find((h: any) => h.name === "Subject")?.value as string,
+            from: r.body.payload.headers.find((h: any) => h.name === "From")?.value as string,
+            date: r.body.payload.headers.find((h: any) => h.name === "Date")?.value as string,
+          };
+        });
+        return resolve(res);
+      }
+    });
+  })
 }
+
+// async function fetchItemInfo(id: string): Promise<MailResponseType> {
+//   const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, {
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+//     },
+//   });
+
+//   if (!res.ok) {
+//     console.error("fetch items error:", await res.text());
+//     throw new Error(res.statusText);
+//   }
+
+//   const json = (await res.json()) as {
+//     id: string;
+//     payload: {
+//       partId: string;
+//       mimetype: string;
+//       body: {
+//         data: string;
+//       };
+//       headers: { name: string; value: string }[];
+//     };
+//   };
+
+//   return {
+//     id: json.id,
+//     subject: json.payload.headers.find((h) => h.name === "Subject")?.value as string,
+//     from: json.payload.headers.find((h) => h.name === "From")?.value as string,
+//     date: json.payload.headers.find((h) => h.name === "Date")?.value as string,
+//   };
+// }

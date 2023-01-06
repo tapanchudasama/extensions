@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Action, ActionPanel, List, Icon, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, List, Icon, showToast, Toast, Color } from "@raycast/api";
 import { MailResponseType } from "./oauth/google";
 import { useMail } from "./useMail";
 
@@ -49,13 +49,8 @@ export default function Command() {
           title={item.subject}
           //   icon={Icon.Envelope}
           accessories={[
-            // { text: `An Accessory Text`, icon: Icon.Hammer },
-            // { text: { value: `A Colored Accessory Text`, color: Color.Orange }, icon: Icon.Hammer },
-            { date: new Date(item.date) },
-            // { icon: Icon.Person },
-            // { tag: { value: "From", color: Color.Magenta } },
-            { text: item.from },
-            // { tag: { value: new Date(item.internalDate), color: Color.Magenta } },
+            { tag: { value: item.from, color: Color.Yellow } },
+            { tag: { value: new Date(item.date), color: Color.Blue } },
             // { tag: { value: "User", color: Color.Magenta }, tooltip: "Tag with tooltip" },
           ]}
           //   detail={<List.Item.Detail markdown={atob(item.payload.body.data)} />}

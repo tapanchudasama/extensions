@@ -13,7 +13,7 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "gmail",
+      "name": "index",
       "title": "Gmail",
       "subtitle": "See Gmail Inbox",
       "icon": "gmail.png",
@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.45.2",
+    "batchelor": "^2.0.2",
     "node-fetch": "^3.3.0"
   },
   "devDependencies": {
