@@ -125,7 +125,7 @@ export async function fetchItems(): Promise<MailResponseType[]> {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return new Promise((resolve, reject) => {
-    batch.add(arr).run(function (err, response) {
+    batch.add(arr).run(function (err:any, response:any) {
       if (err) {
         reject(err.toString());
       } else {

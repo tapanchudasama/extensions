@@ -14,7 +14,7 @@
   "commands": [
     {
       "name": "index",
-      "title": "Gmail",
+      "title": "Gmail Inbox",
       "subtitle": "See Gmail Inbox",
       "icon": "gmail.png",
       "author": "tapanchudasama",
