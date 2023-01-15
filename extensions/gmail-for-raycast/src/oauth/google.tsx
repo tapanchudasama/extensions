@@ -142,36 +142,3 @@ export async function fetchItems(): Promise<MailResponseType[]> {
     });
   })
 }
-
-// async function fetchItemInfo(id: string): Promise<MailResponseType> {
-//   const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, {
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
-//     },
-//   });
-
-//   if (!res.ok) {
-//     console.error("fetch items error:", await res.text());
-//     throw new Error(res.statusText);
-//   }
-
-//   const json = (await res.json()) as {
-//     id: string;
-//     payload: {
-//       partId: string;
-//       mimetype: string;
-//       body: {
-//         data: string;
-//       };
-//       headers: { name: string; value: string }[];
-//     };
-//   };
-
-//   return {
-//     id: json.id,
-//     subject: json.payload.headers.find((h) => h.name === "Subject")?.value as string,
-//     from: json.payload.headers.find((h) => h.name === "From")?.value as string,
-//     date: json.payload.headers.find((h) => h.name === "Date")?.value as string,
-//   };
-// }

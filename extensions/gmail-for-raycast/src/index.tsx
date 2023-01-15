@@ -4,10 +4,8 @@ import { MailResponseType } from "./oauth/google";
 import { useMail } from "./useMail";
 
 export default function Command() {
-  // const [error, setError] = useState("");
   const [searchText, setSearchText] = useState("");
   const [filteredList, filterList] = useState<MailResponseType[]>([]);
-  // const [list, setList] = useState<MailResponseType[]>([]);
   const [list, loading, error] = useMail();
 
   useEffect(() => {
@@ -34,7 +32,6 @@ export default function Command() {
 
   return (
     <List
-      //   isShowingDetail
       isLoading={loading}
       filtering={false}
       onSearchTextChange={setSearchText}
@@ -47,13 +44,10 @@ export default function Command() {
         <List.Item
           key={item.id}
           title={item.subject}
-          //   icon={Icon.Envelope}
           accessories={[
             { tag: { value: item.from, color: Color.Yellow } },
             { tag: { value: new Date(item.date), color: Color.Blue } },
-            // { tag: { value: "User", color: Color.Magenta }, tooltip: "Tag with tooltip" },
           ]}
-          //   detail={<List.Item.Detail markdown={atob(item.payload.body.data)} />}
           actions={
             <ActionPanel title="Open in Browser">
               <Action.OpenInBrowser url={`https://mail.google.com/mail/u/0/#inbox/${item.id}`} />
